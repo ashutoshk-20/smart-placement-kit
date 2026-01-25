@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+livekit
+livekit-agents
+livekit-plugins-google
+python-dotenv
+motor
+pydantic
+pydantic-settings
+python-multipart
