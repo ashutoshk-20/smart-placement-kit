@@ -12,6 +12,7 @@ from livekit.plugins import (
 )
 
 from prompts import AGENT_INSTRUCTIONS
+from tools import complete_interview
 
 # Load environment variables
 load_dotenv(".env.local")
@@ -23,8 +24,9 @@ class Assistant(Agent):
     def __init__(self) -> None:
         super().__init__(
             instructions=AGENT_INSTRUCTIONS, 
-
+            tools=[complete_interview]
         )
+
 server = AgentServer()
 
 @server.rtc_session()
@@ -33,8 +35,10 @@ async def mock_interview_agent(ctx: agents.JobContext):
     
     session = AgentSession(
         llm=google.realtime.RealtimeModel(
-            voice="Puck", # Options: Puck, Charon, Kore, Fenrir, Aoede
+            voice="Puck",
         ),
+        # STT is disabled to avoid Service Account JSON requirement. 
+        # The RealtimeModel will handle voice interaction.
         vad=silero.VAD.load(),
     )
 

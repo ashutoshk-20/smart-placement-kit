@@ -80,7 +80,7 @@ const MockInterviewPage = () => {
         </>
       ) : (
         <div className="mt-8">
-          <InterviewSession room={roomName} username={username} />
+          <InterviewSession room={roomName} username={username} behavioralMetrics={feedback} />
           <AttentionTracker onFeedback={setFeedback} />
         </div>
       )}
