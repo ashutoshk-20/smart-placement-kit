@@ -3,7 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
 import { Button } from './ui/button'
-import { ChevronDown, FileText, GraduationCap, LayoutDashboard, PenBox, PenBoxIcon, StarsIcon } from 'lucide-react'
+import { Code, ChevronDown, FileText, GraduationCap, LayoutDashboard, PenBox, PenBoxIcon, StarsIcon } from 'lucide-react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { checkUser } from '@/lib/checkUser'
 
@@ -58,9 +58,15 @@ const Header = async() => {
                                     </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem>
-                                    <Link href={"/interview"} className='flex items-center gap-2'>
+                                    <Link href={"/interview"} className='flex items-center gap-2 w-full'>
                                         <GraduationCap className='h-4 w-4' />
                                         <span>Interview Prep</span>
+                                    </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <Link href={"/coding"} className='flex items-center gap-2 w-full'>
+                                        <Code className='h-4 w-4' />
+                                        <span>Coding Challenge</span>
                                     </Link>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
