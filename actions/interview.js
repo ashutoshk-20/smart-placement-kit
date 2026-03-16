@@ -25,7 +25,7 @@ export async function generateQuiz(jobDescription = null) {
     if (!user) throw new Error("User not found");
 
     const prompt = `
-    Generate 10 technical interview questions for a ${user.industry
+    Generate 20 technical and aptitude interview questions for a ${user.industry
         } professional${user.skills?.length ? ` with expertise in ${user.skills.join(", ")}` : ""
         }.
     ${jobDescription ? `The questions should be specifically tailored to this job description: ${jobDescription}` : ""}

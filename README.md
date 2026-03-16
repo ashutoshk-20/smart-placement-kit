@@ -11,9 +11,14 @@ Smart Placement Kit is an AI-powered platform designed to streamline career prep
 - **AI Backend**: FastAPI (Python)
 - **Real-time AI**: LiveKit Agents, Google Gemini (Multimodal LLM), MediaPipe (Computer Vision)
 
-## ✨ key AI Features
+## ✨ Key Features & Capabilities
 
-### 1. AI Behavioral Analysis (Attention Tracker)
+### 1. Comprehensive Placement Process
+- **End-to-End Workflow**: Guides students through the entire placement lifecycle from preparation to job application.
+- **Application History**: Track previous interview tests, resume progress, and application status easily.
+- **Step-by-Step Milestones**: Includes Resume screening, Aptitude tests, Coding challenges, and HR/Technical interviews.
+
+### 2. AI Behavioral Analysis (Attention Tracker)
 A state-of-the-art vision module that monitors your performance in real-time during quizzes and interviews:
 - **Eye Contact Tracking**: Ensures you are engaged with the interviewer.
 - **Posture Analysis**: Detects leaning or excessive movement to maintain a professional stance.
@@ -21,16 +26,21 @@ A state-of-the-art vision module that monitors your performance in real-time dur
 - **Live Coaching**: Provides dynamic, non-intrusive feedback cards.
 - **Session Reports**: Generates a summary report of your behavioral performance.
 
-### 2. Immersive AI Mock Interview
+### 3. Immersive AI Mock Interview
 Experience a real-time conversation with an AI Avatar powered by LiveKit and Gemini:
 - **Dual-View Layout**: Clean, focused interface showing only the Candidate and the AI Avatar.
 - **Seamless Voice/Video**: Integrated low-latency communication.
 - **Automatic Lifecycle**: Camera turns off and redirects you safely once the meeting ends.
 
-### 3. Smart Assessment Tools
+### 4. Smart Assessment Tools & Coding Arena
 - **Technical & Aptitude Quizzes**: Tailored questions based on your industry and skills.
-- **Instant AI Explanations**: Deep dive into why an answer was correct or incorrect.
+- **Interactive Coding Environment**: Solve technical challenges within an integrated coding playground.
+- **Instant AI Explanations**: Deep dive into why an answer was correct or incorrect, with feedback on code structure.
 - **Skill Tracking**: Visual performance charts to track your growth over time.
+
+### 5. Career Preparation Suite
+- **AI Cover Letter Generator**: Generate tailored cover letters using Gemini based on company name, job title, and description. Manage and copy previously generated cover letters effortlessly.
+- **AI Resume Builder**: Create ATS-friendly resumes guided by AI recommendations.
 
 ## 📁 Project Structure
 - `/app` - Next.js frontend routes and API endpoints.

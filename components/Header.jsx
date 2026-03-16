@@ -69,6 +69,12 @@ const Header = async() => {
                                         <span>Coding Challenge</span>
                                     </Link>
                                 </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                    <Link href={"/placement-process"} className='flex items-center gap-2 w-full'>
+                                        <StarsIcon className='h-4 w-4 text-primary' />
+                                        <span className="font-semibold text-primary">Placement Process</span>
+                                    </Link>
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
 

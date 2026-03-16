@@ -22,7 +22,7 @@ import { Button } from "./ui/button";
 import { saveMockInterviewResult } from "@/actions/mock-interview";
 import { toast } from "sonner";
 
-export default function InterviewSession({ room, username, behavioralMetrics }) {
+export default function InterviewSession({ room, username, behavioralMetrics, onComplete }) {
     const [token, setToken] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const router = useRouter();
@@ -60,11 +60,20 @@ export default function InterviewSession({ room, username, behavioralMetrics }) 
             });
             console.log("Save complete. ID:", result._id);
             toast.success("AI Feedback generated!");
-            router.push("/interview");
+            
+            if (onComplete) {
+                onComplete(result);
+            } else {
+                router.push("/interview");
+            }
         } catch (error) {
             console.error("Save error:", error);
-            toast.error("Analysis failed. Returning to dashboard.");
-            router.push("/interview");
+            toast.error("Analysis failed.");
+            if (onComplete) {
+                onComplete(null, error);
+            } else {
+                router.push("/interview");
+            }
         }
     };
 
@@ -109,7 +118,7 @@ export default function InterviewSession({ room, username, behavioralMetrics }) 
                                 Generating detailed behavioral and technical feedback...
                             </p>
                             <p className="text-[10px] text-zinc-500 uppercase tracking-widest font-mono">
-                                Gemini 1.5 Flash processing transcript
+                                Gemini 2.5 Flash processing transcript
                             </p>
                         </div>
                     </div>

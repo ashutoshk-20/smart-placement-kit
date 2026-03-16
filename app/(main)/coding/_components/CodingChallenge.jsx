@@ -17,8 +17,8 @@ import "@/app/globals.css"; // Ensure global styles apply
 const MDEditor = dynamic(() => import('@uiw/react-md-editor'), { ssr: false });
 const MDMarkdown = dynamic(() => import('@uiw/react-md-editor').then(mod => mod.default.Markdown), { ssr: false });
 
-export default function CodingChallenge({ codingAssessments = [] }) {
-  const [difficulty, setDifficulty] = useState("Medium");
+export default function CodingChallenge({ codingAssessments = [], defaultDifficulty = "Medium", fixedDifficulty = false, onComplete }) {
+  const [difficulty, setDifficulty] = useState(defaultDifficulty);
   const [expandedHistoryIndex, setExpandedHistoryIndex] = useState(0); 
   const [loading, setLoading] = useState(false);
   const [challenges, setChallenges] = useState(null); 
@@ -88,10 +88,14 @@ export default function CodingChallenge({ codingAssessments = [] }) {
   const handleSubmit = async () => {
       setIsSubmitting(true);
       try {
-        await submitCodingAssessment(challenges, userCodes, difficulty);
+        const assessment = await submitCodingAssessment(challenges, userCodes, difficulty);
         toast.success("Assessment submitted successfully!");
         setChallenges(null);
-        router.refresh();
+        if (onComplete) {
+            onComplete(assessment);
+        } else {
+            router.refresh();
+        }
       } catch (err) {
          toast.error("Failed to submit assessment.");
       } finally {
@@ -218,8 +222,8 @@ export default function CodingChallenge({ codingAssessments = [] }) {
                     {['Easy', 'Medium', 'Hard'].map((level) => (
                       <div 
                         key={level}
-                        onClick={() => setDifficulty(level)}
-                        className={`cursor-pointer border-2 rounded-xl py-4 select-none text-center transition-all duration-300 ${difficulty === level ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20 transform scale-[1.03] ring-2 ring-primary ring-offset-2 ring-offset-background' : 'bg-background hover:bg-muted text-muted-foreground hover:text-foreground hover:border-primary/50'}`}
+                        onClick={() => !fixedDifficulty && setDifficulty(level)}
+                        className={`cursor-pointer border-2 rounded-xl py-4 select-none text-center transition-all duration-300 ${difficulty === level ? 'bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20 transform scale-[1.03] ring-2 ring-primary ring-offset-2 ring-offset-background' : 'bg-background hover:bg-muted text-muted-foreground hover:text-foreground hover:border-primary/50'} ${fixedDifficulty ? 'pointer-events-none opacity-60' : ''}`}
                       >
                         {level}
                       </div>
