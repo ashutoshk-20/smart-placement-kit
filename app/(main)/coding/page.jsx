@@ -10,9 +10,14 @@ export const metadata = {
 export default async function CodingPage() {
   const codingAssessments = await getCodingAssessments();
 
+  // Guard: make sure it's always an array
+  const safeAssessments = Array.isArray(codingAssessments) 
+    ? codingAssessments 
+    : [];
+
   return (
     <div className="w-full px-4 sm:px-6 lg:px-8 py-4 h-[calc(100vh-80px)] overflow-y-auto">
-      <CodingChallenge codingAssessments={codingAssessments} />
+      <CodingChallenge codingAssessments={safeAssessments} />
     </div>
   );
 }

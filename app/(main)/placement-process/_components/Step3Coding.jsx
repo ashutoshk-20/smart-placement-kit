@@ -20,27 +20,31 @@ export default function Step3Coding({ process, setProcess }) {
   const difficulty = getDifficulty();
 
   const handleAssessmentComplete = async (assessment) => {
-    setAdvancing(true);
-    try {
-      // Call action to save the coding result on the placement process tracking document
-      const updatedProcess = await advanceToTechnical(
-          process._id, 
-          assessment._id, 
-          assessment.overallScore
-      );
-      
-      if (!updatedProcess.codingResult.passed) {
-          toast.error("Coding score was below passing criteria.");
-      } else {
-          toast.success("Coding round cleared!");
-      }
-      setProcess(updatedProcess);
-    } catch (error) {
-      toast.error(error.message || "Failed to progress to Technical Round.");
-    } finally {
-      setAdvancing(false);
+  setAdvancing(true);
+
+  try {
+    if (!assessment.passed) {
+      toast.error("Coding round failed");
+
+      setProcess({
+        ...process,
+        status: "failed"
+      });
+    } else {
+      toast.success("Coding round cleared!");
+
+      setProcess({
+        ...process,
+        currentStep: 4 // 🔥 move to technical
+      });
     }
-  };
+
+  } catch (error) {
+    toast.error("Error in coding step");
+  } finally {
+    setAdvancing(false);
+  }
+};
 
   if (advancing) {
       return (
