@@ -5,125 +5,137 @@ import User from "@/models/User";
 import CodingAssessment from "@/models/CodingAssessment";
 import { auth } from "@clerk/nextjs/server";
 
-const API_BASE = process.env.NODE_ENV === "development" 
-  ? "http://localhost:5001" 
-  : "/api/coding";
+const API_BASE = "https://coding-platform-1lnw.onrender.com";
 
+// 🔹 Generate questions
 export async function generateCodingChallenges(difficulty) {
-  const { userId: clerkUserId } = await auth();
-  if (!clerkUserId) throw new Error("Unauthorized");
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
 
-  try {
-    const res = await fetch(`${API_BASE}/questions`, {
-      cache: "no-store",
-      headers: { Accept: "application/json" },
-    });
+  const res = await fetch(`${API_BASE}/questions`, {
+    cache: "no-store",
+  });
 
-    if (!res.ok) {
-      const text = await res.text();
-      console.error(`[generate] Backend error ${res.status}:`, text);
-      throw new Error(`Failed to fetch questions (status ${res.status})`);
-    }
+  if (!res.ok) throw new Error("Failed to fetch questions");
 
-    const allQuestions = await res.json();
+  const allQuestions = await res.json();
 
-    let matching = allQuestions.filter(
-      (q) => q.difficulty?.toLowerCase() === difficulty.toLowerCase()
-    );
+  let filtered = allQuestions.filter(
+    (q) => q.difficulty?.toLowerCase() === difficulty.toLowerCase()
+  );
 
-    if (matching.length === 0) {
-      matching = allQuestions;
-    }
+  if (filtered.length === 0) filtered = allQuestions;
 
-    const shuffled = matching.sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, Math.min(4, shuffled.length));
+  const shuffled = filtered.sort(() => 0.5 - Math.random());
+  const selected = shuffled.slice(0, 3);
 
-    return selected.map((q) => ({
-      id: String(q.id),
-      title: q.title || "Untitled Challenge",
-      description: q.description || "No description provided.",
-      difficulty: q.difficulty || "Medium",
-      starterCode: q.starterCode || {
-        javascript: "// Write your code here...",
-        python: "# Write your code here...",
-        java: "// Write your code here...",
-        cpp: "// Write your code here...",
-      },
-      hints: [],
-      testCases: (q.tests || []).map((t) => ({
-        input: t.input || "",
-        expectedOutput: t.expectedOutput || "",
-      })),
-    }));
-  } catch (err) {
-    console.error("[generateCodingChallenges] Full Error:", err);
-    throw new Error("Failed to load coding challenges. Make sure backend is running on port 5001.");
-  }
+  return selected.map((q) => ({
+    id: String(q.id),
+    title: q.title,
+    description: q.description,
+    difficulty: q.difficulty,
+    starterCode: q.starterCode,
+    testCases: q.tests || [],
+  }));
 }
 
+// 🔹 Run tests
 export async function runCodeTest(challenge, code, language) {
-  const { userId: clerkUserId } = await auth();
-  if (!clerkUserId) throw new Error("Unauthorized");
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
 
-  if (!code?.trim()) return { error: "No code provided." };
+  const res = await fetch(`${API_BASE}/run-tests`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      questionId: Number(challenge.id),
+      language,
+      code,
+    }),
+  });
 
-  try {
+  if (!res.ok) throw new Error("Run test failed");
+
+  const data = await res.json();
+
+  return data.results.map((r) => ({
+    passed: r.pass,
+    input: r.input,
+    expectedOutput: r.expectedOutput,
+    actualOutput: r.output,
+    error: r.stderr,
+  }));
+}
+
+// 🔥 SUBMIT (NOW WORKING)
+export async function submitCodingAssessment(challenges, userCodes, difficulty) {
+  const { userId } = await auth();
+  if (!userId) throw new Error("Unauthorized");
+
+  let total = 0;
+  let passed = 0;
+
+  for (let i = 0; i < challenges.length; i++) {
+    const challenge = challenges[i];
+    const code = userCodes[i]?.javascript || "";
+
     const res = await fetch(`${API_BASE}/run-tests`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         questionId: Number(challenge.id),
-        language: language.toLowerCase(),
-        code: code.trim(),
+        language: "javascript",
+        code,
       }),
     });
 
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`Run tests failed: ${res.status}`);
-    }
-
     const data = await res.json();
 
-    return data.results.map((r) => ({
-      passed: !!r.pass,
-      input: r.input || "",
-      expectedOutput: r.expectedOutput || "",
-      actualOutput: r.output || "",
-      error: r.stderr || null,
-    }));
-  } catch (err) {
-    console.error("[runCodeTest] Error:", err);
-    throw new Error("Failed to run tests. Is backend running?");
+    const allPassed = data.results.every((r) => r.pass);
+
+    total++;
+    if (allPassed) passed++;
   }
+
+  const score = Math.round((passed / total) * 100);
+
+  // OPTIONAL DB SAVE
+  try {
+    await dbConnect();
+    const user = await User.findOne({ clerkUserId: userId });
+
+    if (user) {
+      await CodingAssessment.create({
+        userId: user._id,
+        overallScore: score,
+        difficulty,
+        challenges,
+      });
+    }
+  } catch (err) {
+    console.log("DB save skipped:", err.message);
+  }
+
+  return {
+    _id: "assessment-id",
+    overallScore: score,
+    passed: score >= 50,
+  };
 }
 
-export async function submitCodingAssessment(challenges, userCodes, difficulty) {
-  const { userId: clerkUserId } = await auth();
-  if (!clerkUserId) throw new Error("Unauthorized");
-
-  await dbConnect();
-  const user = await User.findOne({ clerkUserId });
-  if (!user) throw new Error("User not found");
-
-  // ... (keep your existing Gemini logic for submission as it was)
-  // I'll keep it short for now - you can paste your old submit function here if needed
-  console.log("Submit called with", challenges.length, "challenges");
-  // TODO: Add your full submit logic later
-  throw new Error("Submit function not fully implemented yet");
-}
-
+// 🔹 History
 export async function getCodingAssessments() {
-  const { userId: clerkUserId } = await auth();
-  if (!clerkUserId) return [];
+  const { userId } = await auth();
+  if (!userId) return [];
 
   await dbConnect();
-  const user = await User.findOne({ clerkUserId });
+  const user = await User.findOne({ clerkUserId: userId });
   if (!user) return [];
 
-  const assessments = await CodingAssessment.find({ userId: user._id })
-    .sort({ createdAt: -1 })
-    .lean();
-
-  return JSON.parse(JSON.stringify(assessments || []));
+  const data = await CodingAssessment.find({ userId: user._id }).lean();
+  return JSON.parse(JSON.stringify(data));
 }

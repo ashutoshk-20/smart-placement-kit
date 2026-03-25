@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Coding Preview</title>
+
+  <!-- React -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/babel-standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      padding: 20px;
+      background: #111;
+      color: white;
+    }
+    button {
+      padding: 10px;
+      margin: 5px;
+      cursor: pointer;
+    }
+    textarea {
+      width: 100%;
+      height: 200px;
+      background: #1e1e1e;
+      color: white;
+      border: 1px solid #444;
+      padding: 10px;
+    }
+    .box {
+      border: 1px solid #444;
+      padding: 10px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+
+const API_BASE = "https://coding-platform-1lnw.onrender.com";
+
+function App() {
+  const [questions, setQuestions] = React.useState([]);
+  const [current, setCurrent] = React.useState(0);
+  const [code, setCode] = React.useState("");
+  const [results, setResults] = React.useState(null);
+
+  // 🔹 Fetch questions
+  React.useEffect(() => {
+    fetch(API_BASE + "/questions")
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data && data.length > 0) {
+          const sliced = data.slice(0, 2);
+          setQuestions(sliced);
+
+          if (sliced[0] && sliced[0].starterCode && sliced[0].starterCode.javascript) {
+            setCode(sliced[0].starterCode.javascript);
+          } else {
+            setCode("");
+          }
+        }
+      })
+      .catch(function(err) {
+        console.log("Error fetching questions:", err);
+      });
+  }, []);
+
+  // 🔹 Run Tests
+  const runTests = async () => {
+    const q = questions[current];
+
+    try {
+      const res = await fetch(API_BASE + "/run-tests", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          questionId: q.id,
+          language: "javascript",
+          code: code
+        })
+      });
+
+      const data = await res.json();
+      setResults(data.results);
+
+    } catch (err) {
+      console.log("Run error:", err);
+    }
+  };
+
+  if (!questions.length) return <p>Loading...</p>;
+
+  const q = questions[current];
+
+  return (
+    <div>
+
+      <h2>{q.title || "Coding Problem"}</h2>
+
+      <p>{q.description || "No description available"}</p>
+
+      <textarea
+        value={code}
+        onChange={(e) => setCode(e.target.value)}
+      />
+
+      <br/>
+
+      <button onClick={runTests}>Run Tests</button>
+
+      <button onClick={() => {
+        const next = (current + 1) % questions.length;
+        setCurrent(next);
+
+        const nextQ = questions[next];
+
+        if (nextQ && nextQ.starterCode && nextQ.starterCode.javascript) {
+          setCode(nextQ.starterCode.javascript);
+        } else {
+          setCode("");
+        }
+
+        setResults(null);
+      }}>
+        Next Problem
+      </button>
+
+      {results && (
+        <div className="box">
+          <h3>Results:</h3>
+
+          {results.map((r, i) => (
+            <div key={i} style={{ marginBottom: "10px" }}>
+              <b>Test {i+1}:</b> {r.pass ? "✅ Passed" : "❌ Failed"} <br/>
+              <span>Input: {r.input}</span><br/>
+              <span>Output: {r.output}</span><br/>
+              {!r.pass && <span>Expected: {r.expectedOutput}</span>}
+            </div>
+          ))}
+
+        </div>
+      )}
+
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+
+</script>
+</body>
+</html>
