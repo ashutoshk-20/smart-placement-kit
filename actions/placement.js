@@ -3,18 +3,18 @@
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 import PlacementProcess from "@/models/PlacementProcess";
-import { auth } from "@clerk/nextjs/server";
+import { getUserIdFromRequest } from "@/lib/auth";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
 export async function startPlacementProcess({ role, jobDescription, salary, resumeText }) {
-    const { userId: clerkUserId } = await auth();
-    if (!clerkUserId) throw new Error("Unauthorized");
+    const userId = await getUserIdFromRequest();
+    if (!userId) throw new Error("Unauthorized");
 
     await dbConnect();
-    const user = await User.findOne({ clerkUserId });
+    const user = await User.findById(userId);
     if (!user) throw new Error("User not found");
 
     const process = await PlacementProcess.create({
@@ -31,8 +31,8 @@ export async function startPlacementProcess({ role, jobDescription, salary, resu
 }
 
 export async function evaluateResumeShortlist(processId) {
-    const { userId: clerkUserId } = await auth();
-    if (!clerkUserId) throw new Error("Unauthorized");
+    const userId = await getUserIdFromRequest();
+    if (!userId) throw new Error("Unauthorized");
     
     await dbConnect();
     const process = await PlacementProcess.findById(processId);
@@ -78,8 +78,8 @@ export async function evaluateResumeShortlist(processId) {
 }
 
 export async function saveAptitudeResult(processId, score, maxScore) {
-    const { userId: clerkUserId } = await auth();
-    if (!clerkUserId) throw new Error("Unauthorized");
+    const userId = await getUserIdFromRequest();
+    if (!userId) throw new Error("Unauthorized");
     
     await dbConnect();
     const process = await PlacementProcess.findById(processId);
@@ -103,8 +103,8 @@ export async function saveAptitudeResult(processId, score, maxScore) {
 
 export async function advanceToTechnical(processId, assessmentId, overallScore) {
     // This is called after Coding Assessment returns completion
-    const { userId: clerkUserId } = await auth();
-    if (!clerkUserId) throw new Error("Unauthorized");
+    const userId = await getUserIdFromRequest();
+    if (!userId) throw new Error("Unauthorized");
     
     await dbConnect();
     const process = await PlacementProcess.findById(processId);
@@ -127,8 +127,8 @@ export async function advanceToTechnical(processId, assessmentId, overallScore) 
 }
 
 export async function evaluateTechnicalInterviewFeedback(processId, feedbackObj) {
-    const { userId: clerkUserId } = await auth();
-    if (!clerkUserId) throw new Error("Unauthorized");
+    const userId = await getUserIdFromRequest();
+    if (!userId) throw new Error("Unauthorized");
     
     await dbConnect();
     const process = await PlacementProcess.findById(processId);
@@ -152,8 +152,8 @@ export async function evaluateTechnicalInterviewFeedback(processId, feedbackObj)
 }
 
 export async function evaluateHRInterviewFeedback(processId, feedbackObj) {
-    const { userId: clerkUserId } = await auth();
-    if (!clerkUserId) throw new Error("Unauthorized");
+    const userId = await getUserIdFromRequest();
+    if (!userId) throw new Error("Unauthorized");
     
     await dbConnect();
     const process = await PlacementProcess.findById(processId);
@@ -177,21 +177,21 @@ export async function evaluateHRInterviewFeedback(processId, feedbackObj) {
 }
 
 export async function getPlacementProcess(processId) {
-    const { userId: clerkUserId } = await auth();
-    if (!clerkUserId) throw new Error("Unauthorized");
+    const userId = await getUserIdFromRequest();
+    if (!userId) throw new Error("Unauthorized");
     
     await dbConnect();
-    const user = await User.findOne({ clerkUserId });
+    const user = await User.findById(userId);
     const process = await PlacementProcess.findOne({ _id: processId, userId: user._id });
     if (!process) return null;
     return JSON.parse(JSON.stringify(process));
 }
 export async function getUserPlacementProcesses() {
-    const { userId: clerkUserId } = await auth();
-    if (!clerkUserId) throw new Error("Unauthorized");
+    const userId = await getUserIdFromRequest();
+    if (!userId) throw new Error("Unauthorized");
     
     await dbConnect();
-    const user = await User.findOne({ clerkUserId });
+    const user = await User.findById(userId);
     if (!user) return [];
     
     const processes = await PlacementProcess.find({ userId: user._id }).sort({ createdAt: -1 });

@@ -3,13 +3,13 @@
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 import CodingAssessment from "@/models/CodingAssessment";
-import { auth } from "@clerk/nextjs/server";
+import { getUserIdFromRequest } from "@/lib/auth";
 
 const API_BASE = "https://coding-platform-1lnw.onrender.com";
 
 // 🔹 Generate questions
 export async function generateCodingChallenges(difficulty) {
-  const { userId } = await auth();
+  const userId = await getUserIdFromRequest();
   if (!userId) throw new Error("Unauthorized");
 
   const res = await fetch(`${API_BASE}/questions`, {
@@ -41,7 +41,7 @@ export async function generateCodingChallenges(difficulty) {
 
 // 🔹 Run tests
 export async function runCodeTest(challenge, code, language) {
-  const { userId } = await auth();
+  const userId = await getUserIdFromRequest();
   if (!userId) throw new Error("Unauthorized");
 
   const res = await fetch(`${API_BASE}/run-tests`, {
@@ -71,7 +71,7 @@ export async function runCodeTest(challenge, code, language) {
 
 // 🔥 SUBMIT (NOW WORKING)
 export async function submitCodingAssessment(challenges, userCodes, difficulty) {
-  const { userId } = await auth();
+  const userId = await getUserIdFromRequest();
   if (!userId) throw new Error("Unauthorized");
 
   let total = 0;
@@ -106,7 +106,7 @@ export async function submitCodingAssessment(challenges, userCodes, difficulty) 
   // OPTIONAL DB SAVE
   try {
     await dbConnect();
-    const user = await User.findOne({ clerkUserId: userId });
+    const user = await User.findById(userId) ;
 
     if (user) {
       await CodingAssessment.create({
@@ -129,11 +129,11 @@ export async function submitCodingAssessment(challenges, userCodes, difficulty) 
 
 // 🔹 History
 export async function getCodingAssessments() {
-  const { userId } = await auth();
+  const userId = await getUserIdFromRequest();
   if (!userId) return [];
 
   await dbConnect();
-  const user = await User.findOne({ clerkUserId: userId });
+  const user = await User.findById(userId) ;
   if (!user) return [];
 
   const data = await CodingAssessment.find({ userId: user._id }).lean();

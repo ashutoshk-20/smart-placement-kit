@@ -13,7 +13,6 @@ import { Controller, useForm } from 'react-hook-form';
 import EntryForm from './EntryForm';
 import { entriesToMarkdown } from '@/app/lib/helper';
 import MDEditor from '@uiw/react-md-editor';
-import { useUser } from '@clerk/nextjs';
 import { toast } from 'sonner';
 // import html2pdf from 'html2pdf.js';
 
@@ -22,8 +21,8 @@ const ResumeBuilder = ({ initalContent }) => {
     const [activeTab, setActiveTab] = useState("edit");
     const [resumeMode, setResumeMode] = useState("preview");
     const [previewContent, setPreviewContent] = useState(initalContent);
-    const { user } = useUser();
     const [isGenerating, setIsGenerating] = useState(false);
+    const [username, setUsername] = useState("Candidate");
     console.log("Initial content", initalContent);
 
     const {
@@ -64,6 +63,16 @@ const ResumeBuilder = ({ initalContent }) => {
         }
     }, [formValues, activeTab]);
 
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        if (token) {
+            try {
+            JSON.parse(atob(token.split(".")[1]));
+            setUsername("Candidate");
+            } catch {}
+        }
+    }, []);
+
     const getContactMarkdown = () => {
         const { contactInfo } = formValues;
         console.log(contactInfo.email);
@@ -76,7 +85,7 @@ const ResumeBuilder = ({ initalContent }) => {
         if (contactInfo.twitter) parts.push(`🐦 [Twitter](${contactInfo.twitter})`);
 
         return parts.length > 0
-            ? `## <div align="center">${user.fullName}</div>
+            ? `## <div align="center">${username}</div>
         \n\n<div align="center">\n\n${parts.join(" | ")}\n\n</div>`
             : "";
     }

@@ -3,7 +3,7 @@
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 import Interview from "@/models/Interview";
-import { auth } from "@clerk/nextjs/server";
+import { getUserIdFromRequest } from "@/lib/auth";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -12,11 +12,11 @@ const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 export async function saveMockInterviewResult({ roomName, behavioralMetrics, transcript }) {
     console.log(`Processing interview feedback for room: ${roomName}`);
 
-    const { userId: clerkUserId } = await auth();
-    if (!clerkUserId) throw new Error("Unauthorized");
+    const userId = await getUserIdFromRequest();
+    if (!userId) throw new Error("Unauthorized");
 
     await dbConnect();
-    const user = await User.findOne({ clerkUserId });
+    const user = await User.findById(userId);
     if (!user) throw new Error("User not found");
 
     if (!transcript || transcript.length === 0) {
@@ -79,11 +79,11 @@ export async function saveMockInterviewResult({ roomName, behavioralMetrics, tra
 }
 
 export async function getMockInterviews() {
-    const { userId: clerkUserId } = await auth();
-    if (!clerkUserId) throw new Error("Unauthorized");
+    const userId = await getUserIdFromRequest();
+    if (!userId) throw new Error("Unauthorized");
 
     await dbConnect();
-    const user = await User.findOne({ clerkUserId });
+    const user = await User.findById(userId);
     if (!user) return [];
 
     try {
