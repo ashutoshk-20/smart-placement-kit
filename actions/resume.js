@@ -3,7 +3,7 @@
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 import Resume from "@/models/Resume";
-import { auth } from "@clerk/nextjs/server";
+import { getUserIdFromRequest } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
@@ -15,13 +15,13 @@ const model = genAI.getGenerativeModel({
 
 
 export async function saveResume(content) {
-  const { userId: clerkUserId } = await auth();
+  const userId = await getUserIdFromRequest();
 
-  if (!clerkUserId) throw new Error("Unauthorized");
+  if (!userId) throw new Error("Unauthorized");
 
   await dbConnect();
 
-  const user = await User.findOne({ clerkUserId });
+  const user = await User.findById(userId);
 
   if (!user) throw new Error("User not found");
 
@@ -40,12 +40,12 @@ export async function saveResume(content) {
 }
 
 export async function getResume() {
-  const { userId: clerkUserId } = await auth();
-  if (!clerkUserId) throw new Error("Unauthorized");
+  const userId = await getUserIdFromRequest();
+  if (!userId) throw new Error("Unauthorized");
 
   await dbConnect();
 
-  const user = await User.findOne({ clerkUserId });
+  const user = await User.findById(userId);
 
   if (!user) throw new Error("User not found");
 
@@ -54,12 +54,12 @@ export async function getResume() {
 }
 
 export async function improveWithAI({ current, type }) {
-  const { userId: clerkUserId } = await auth();
-  if (!clerkUserId) throw new Error("Unauthorized");
+  const userId = await getUserIdFromRequest();
+  if (!userId) throw new Error("Unauthorized");
 
   await dbConnect();
 
-  const user = await User.findOne({ clerkUserId });
+  const user = await User.findById(userId);
 
   if (!user) throw new Error("User not found");
 

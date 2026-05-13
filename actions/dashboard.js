@@ -3,8 +3,8 @@
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 import IndustryInsight from "@/models/IndustryInsight";
-import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getUserIdFromRequest } from "@/lib/auth";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({
@@ -41,13 +41,13 @@ export const generateeAIInsights = async (industry) => {
 }
 
 export async function getIndustryInsights() {
-    const { userId } = await auth();
+    const userId = await getUserIdFromRequest();
 
     if (!userId) throw new Error("Unauthorized");
 
     await dbConnect();
 
-    const user = await User.findOne({ clerkUserId: userId })
+    const user = await User.findById(userId)
         .populate("industryInsight");
 
     if (!user) throw new Error("User not found");

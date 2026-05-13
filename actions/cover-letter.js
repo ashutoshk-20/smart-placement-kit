@@ -3,8 +3,8 @@
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 import CoverLetter from "@/models/CoverLetter";
-import { auth } from "@clerk/nextjs/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getUserIdFromRequest } from "@/lib/auth";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({
@@ -12,12 +12,12 @@ const model = genAI.getGenerativeModel({
 });
 
 export async function getCoverLetters() {
-    const { userId: clerkUserId } = await auth();
+    const userId = await getUserIdFromRequest();
     if (!clerkUserId) throw new Error("Unauthorized");
 
     await dbConnect();
 
-    const user = await User.findOne({ clerkUserId });
+    const user = await User.findById(userId) ;
     if (!user) throw new Error("User not found");
 
     const letters = await CoverLetter.find({ userId: user._id }).sort({ createdAt: -1 });
@@ -25,12 +25,12 @@ export async function getCoverLetters() {
 }
 
 export async function getCoverLetter(id) {
-    const { userId: clerkUserId } = await auth();
+    const userId = await getUserIdFromRequest();
     if (!clerkUserId) throw new Error("Unauthorized");
 
     await dbConnect();
 
-    const user = await User.findOne({ clerkUserId });
+    const user = await User.findById(userId) ;
     if (!user) throw new Error("User not found");
 
     const letter = await CoverLetter.findOne({ _id: id, userId: user._id });
@@ -40,12 +40,12 @@ export async function getCoverLetter(id) {
 }
 
 export async function deleteCoverLetter(id) {
-    const { userId: clerkUserId } = await auth();
+    const userId = await getUserIdFromRequest();
     if (!clerkUserId) throw new Error("Unauthorized");
 
     await dbConnect();
 
-    const user = await User.findOne({ clerkUserId });
+    const user = await User.findById(userId) ;
     if (!user) throw new Error("User not found");
 
     await CoverLetter.findOneAndDelete({ _id: id, userId: user._id });
@@ -53,12 +53,12 @@ export async function deleteCoverLetter(id) {
 }
 
 export async function generateCoverLetter(data) {
-    const { userId: clerkUserId } = await auth();
+    const userId = await getUserIdFromRequest();
     if (!clerkUserId) throw new Error("Unauthorized");
 
     await dbConnect();
 
-    const user = await User.findOne({ clerkUserId });
+    const user = await User.findById(userId) ;
     if (!user) throw new Error("User not found");
 
     const prompt = `

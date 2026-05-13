@@ -3,8 +3,7 @@
 import dbConnect from "@/lib/mongodb";
 import User from "@/models/User";
 import Assessment from "@/models/Assessment";
-import { auth } from "@clerk/nextjs/server";
-
+import { getUserIdFromRequest } from "@/lib/auth";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
@@ -14,13 +13,13 @@ const model = genAI.getGenerativeModel({
 
 
 export async function generateQuiz(jobDescription = null) {
-    const { userId: clerkUserId } = await auth();
+    const userId = await getUserIdFromRequest();
 
-    if (!clerkUserId) throw new Error("Unauthorized");
+    if (!userId) throw new Error("Unauthorized");
 
     await dbConnect();
 
-    const user = await User.findOne({ clerkUserId }).select("industry skills");
+    const user = await User.findById(userId).select("industry skills");
 
     if (!user) throw new Error("User not found");
 
@@ -62,13 +61,13 @@ export async function generateQuiz(jobDescription = null) {
 }
 
 export async function saveQuizResult(questions, answers, score) {
-    const { userId: clerkUserId } = await auth();
+    const userId  = await getUserIdFromRequest();
 
-    if (!clerkUserId) throw new Error("Unauthorized");
+    if (!userId) throw new Error("Unauthorized");
 
     await dbConnect();
 
-    const user = await User.findOne({ clerkUserId });
+    const user = await User.findById(userId);
 
     if (!user) throw new Error("User not found");
 
@@ -129,13 +128,13 @@ export async function saveQuizResult(questions, answers, score) {
 }
 
 export async function getAssessment() {
-    const { userId: clerkUserId } = await auth();
+    const userId  = await getUserIdFromRequest();
 
-    if (!clerkUserId) throw new Error("Unauthorized");
+    if (!userId) throw new Error("Unauthorized");
 
     await dbConnect();
 
-    const user = await User.findOne({ clerkUserId });
+    const user = await User.findById(userId);
 
     if (!user) throw new Error("User not found");
 
